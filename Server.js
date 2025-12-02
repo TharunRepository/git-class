@@ -32,7 +32,18 @@ const applicationSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now }
 });
 
+const registrationSchema = new mongoose.Schema({
+  fullName: { type: String, required: true },
+  email: { type: String, required: true },
+  phone: { type: String, required: true },
+  program: { type: String, required: true },
+  address: { type: String, required: true },
+  details: { type: String },
+  createdAt: { type: Date, default: Date.now }
+});
+
 const Application = mongoose.model('Application', applicationSchema);
+const Registration = mongoose.model('Registration', registrationSchema);
 
 // Route: receive form submission from apply.html
 app.post('/api/applications', async (req, res) => {
@@ -51,6 +62,28 @@ app.post('/api/applications', async (req, res) => {
     res.status(201).json({ message: 'Application submitted successfully' });
   } catch (error) {
     console.error('Error saving application:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Route: receive form submission from registration.html
+app.post('/api/registrations', async (req, res) => {
+  const { fullName, email, phone, program, address, details } = req.body;
+
+  try {
+    const registration = new Registration({
+      fullName,
+      email,
+      phone,
+      program,
+      address,
+      details
+    });
+
+    await registration.save();
+    res.status(201).json({ message: 'Registration submitted successfully' });
+  } catch (error) {
+    console.error('Error saving registration:', error);
     res.status(500).json({ message: 'Internal server error' });
   }
 });
