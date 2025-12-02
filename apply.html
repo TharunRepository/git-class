@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Apply Now - Dayananda Sagar University</title>
+    <link rel="stylesheet" href="./stanford.css" />
+  </head>
+  <body class="apply-page">
+    <main class="apply-main">
+      <section class="apply-card">
+        <header class="apply-header">
+          <h1>Apply to Dayananda Sagar University</h1>
+          <p>Tell us a bit about yourself and the program you are interested in.</p>
+        </header>
+
+        <form class="apply-form" method="POST" action="http://localhost:3000/api/applications">
+          <div class="form-grid">
+            <div class="field">
+              <label>Full Name *</label>
+              <input type="text" name="fullName" required />
+            </div>
+            <div class="field">
+              <label>Email *</label>
+              <input type="email" name="email" required />
+            </div>
+            <div class="field">
+              <label>Phone *</label>
+              <input type="tel" name="phone" required />
+            </div>
+            <div class="field">
+              <label>Program Interested In *</label>
+              <input type="text" name="program" required />
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Additional details (optional)</label>
+            <textarea name="details" rows="4" placeholder="Share any details that will help us process your application"></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn-more">Submit Application</button>
+            <a href="index.html" class="btn-more secondary-link">Back to Home</a>
+          </div>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>
