@@ -88,6 +88,45 @@ app.post('/api/registrations', async (req, res) => {
   }
 });
 
+// Route: search application by email
+app.get('/api/applications/search', async (req, res) => {
+  const { email } = req.query;
+  if (!email) {
+    return res.status(400).json({ message: 'Email is required' });
+  }
+
+  try {
+    // Search in Application collection first
+    let result = await Application.findOne({ email });
+
+    // If not found, check Registration collection
+    if (!result) {
+      result = await Registration.findOne({ email });
+    }
+
+    if (result) {
+      res.json(result);
+    } else {
+      res.status(404).json({ message: 'Application not found' });
+    }
+  } catch (error) {
+    console.error('Error searching application:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
+// Route: get all data (applications and registrations)
+app.get('/api/all-data', async (req, res) => {
+  try {
+    const applications = await Application.find().sort({ createdAt: -1 });
+    const registrations = await Registration.find().sort({ createdAt: -1 });
+    res.json({ applications, registrations });
+  } catch (error) {
+    console.error('Error fetching all data:', error);
+    res.status(500).json({ message: 'Internal server error' });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

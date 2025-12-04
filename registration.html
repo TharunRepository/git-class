@@ -62,6 +62,163 @@
       </form>
     </section>
   </main>
+  <style>
+    /* Modal Styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 2rem;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .preview-details {
+      margin: 1.5rem 0;
+    }
+
+    .preview-item {
+      margin-bottom: 1rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.5rem;
+    }
+
+    .preview-label {
+      font-weight: bold;
+      color: #666;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .preview-value {
+      color: #333;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+    }
+
+    .btn-secondary {
+      background: #f3f4f6;
+      color: #374151;
+      border: 1px solid #d1d5db;
+    }
+  </style>
+
+  <!-- Preview Modal -->
+  <div id="previewModal" class="modal-overlay">
+    <div class="modal-content">
+      <h2>Review Your Application</h2>
+      <p>Please verify your details before submitting.</p>
+
+      <div id="previewContent" class="preview-details">
+        <!-- Content will be populated by JS -->
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="cta btn-secondary" onclick="closePreview()">Edit</button>
+        <button type="button" class="cta" onclick="submitFinal()">Confirm & Submit</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.querySelector('.apply-form');
+    const modal = document.getElementById('previewModal');
+    const previewContent = document.getElementById('previewContent');
+    let formDataObj = {};
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      formDataObj = Object.fromEntries(formData.entries());
+
+      // Generate preview HTML
+      let html = '';
+      const labels = {
+        fullName: 'Full Name',
+        email: 'Email',
+        phone: 'Phone Number',
+        program: 'Program',
+        address: 'Address',
+        details: 'Additional Details'
+      };
+
+      for (const [key, value] of Object.entries(formDataObj)) {
+        if (labels[key] && value) {
+          html += `
+            <div class="preview-item">
+              <span class="preview-label">${labels[key]}</span>
+              <div class="preview-value">${value}</div>
+            </div>
+          `;
+        }
+      }
+
+      previewContent.innerHTML = html;
+      modal.style.display = 'flex';
+    });
+
+    function closePreview() {
+      modal.style.display = 'none';
+    }
+
+    async function submitFinal() {
+      const submitBtn = document.querySelector('#previewModal .cta:last-child');
+      const originalText = submitBtn.innerText;
+      submitBtn.innerText = 'Submitting...';
+      submitBtn.disabled = true;
+
+      try {
+        const response = await fetch('http://localhost:3000/api/registrations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formDataObj)
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert('Registration submitted successfully!');
+          window.location.href = 'index.html';
+        } else {
+          throw new Error(result.message || 'Submission failed');
+        }
+      } catch (error) {
+        alert('Error: ' + error.message);
+        submitBtn.innerText = originalText;
+        submitBtn.disabled = false;
+      }
+    }
+
+    // Close modal if clicking outside
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) {
+        closePreview();
+      }
+    });
+  </script>
 </body>
 
 </html>

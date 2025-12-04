@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Check Application Status - Dayananda Sagar University</title>
+    <link rel="stylesheet" href="./stanford.css" />
+    <style>
+        .retrieval-card {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .search-section {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .search-input-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .search-input-group input {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 300px;
+            font-size: 1rem;
+        }
+
+        .result-section {
+            display: none;
+            border-top: 1px solid #eee;
+            padding-top: 2rem;
+        }
+
+        .detail-row {
+            display: flex;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #f9f9f9;
+            padding-bottom: 0.5rem;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            width: 200px;
+            color: #555;
+        }
+
+        .detail-value {
+            flex: 1;
+            color: #333;
+        }
+
+        .error-msg {
+            color: #dc2626;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: #d1fae5;
+            color: #065f46;
+            border-radius: 999px;
+            font-size: 0.875rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body class="apply-page">
+    <header class="topbar">
+        <div class="topbar-inner">
+            <div class="brand">Dayananda Sagar University</div>
+        </div>
+    </header>
+
+    <main class="apply-main">
+        <section class="retrieval-card">
+            <header class="apply-header">
+                <h1>Check Application Status</h1>
+                <p>Enter your registered email address to view your application details.</p>
+            </header>
+
+            <div class="search-section">
+                <div class="search-input-group">
+                    <input type="email" id="searchEmail" placeholder="Enter your email address" />
+                    <button class="cta" onclick="retrieveApplication()">Retrieve Application</button>
+                </div>
+                <div style="margin-top: 1rem;">
+                    <button class="cta btn-secondary" onclick="viewAllData()">View All Submitted Data</button>
+                </div>
+                <p id="errorMsg" class="error-msg"></p>
+            </div>
+
+            <div id="resultSection" class="result-section">
+                <!-- Single Result Content -->
+                <div id="singleResult">
+                    <h2>Application Details</h2>
+                    <div class="detail-row">
+                        <span class="detail-label">Status</span>
+                        <span class="detail-value"><span class="status-badge">Submitted</span></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Full Name</span>
+                        <span class="detail-value" id="resName"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Email</span>
+                        <span class="detail-value" id="resEmail"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Phone</span>
+                        <span class="detail-value" id="resPhone"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Program</span>
+                        <span class="detail-value" id="resProgram"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Address / Details</span>
+                        <span class="detail-value" id="resDetails"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Submission Date</span>
+                        <span class="detail-value" id="resDate"></span>
+                    </div>
+                </div>
+
+                <!-- All Results Content -->
+                <div id="allResults" style="display: none;">
+                    <h2>All Submitted Data</h2>
+                    <div id="allDataContainer"></div>
+                </div>
+
+                <div style="margin-top: 2rem; text-align: center;">
+                    <a href="index.html" class="cta secondary-link">Back to Home</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        async function retrieveApplication() {
+            const email = document.getElementById('searchEmail').value;
+            const errorMsg = document.getElementById('errorMsg');
+            const resultSection = document.getElementById('resultSection');
+            const singleResult = document.getElementById('singleResult');
+            const allResults = document.getElementById('allResults');
+
+            if (!email) {
+                showError('Please enter an email address.');
+                return;
+            }
+
+            // Reset UI
+            errorMsg.style.display = 'none';
+            resultSection.style.display = 'none';
+            singleResult.style.display = 'block';
+            allResults.style.display = 'none';
+
+            const btn = document.querySelector('.cta');
+            const originalText = btn.innerText;
+            btn.innerText = 'Searching...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(`http://localhost:3000/api/applications/search?email=${encodeURIComponent(email)}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    displayResult(data);
+                } else {
+                    showError(data.message || 'Application not found.');
+                }
+            } catch (error) {
+                showError('Error connecting to server. Please try again.');
+                console.error(error);
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function viewAllData() {
+            const errorMsg = document.getElementById('errorMsg');
+            const resultSection = document.getElementById('resultSection');
+            const singleResult = document.getElementById('singleResult');
+            const allResults = document.getElementById('allResults');
+            const container = document.getElementById('allDataContainer');
+
+            // Reset UI
+            errorMsg.style.display = 'none';
+            resultSection.style.display = 'block';
+            singleResult.style.display = 'none';
+            allResults.style.display = 'block';
+            container.innerHTML = '<p>Loading...</p>';
+
+            try {
+                const response = await fetch('http://localhost:3000/api/all-data');
+                const data = await response.json();
+
+                if (response.ok) {
+                    let html = '';
+
+                    if (data.applications.length > 0) {
+                        html += '<h3>Applications</h3>';
+                        html += generateTable(data.applications);
+                    }
+
+                    if (data.registrations.length > 0) {
+                        html += '<h3>Registrations</h3>';
+                        html += generateTable(data.registrations);
+                    }
+
+                    if (data.applications.length === 0 && data.registrations.length === 0) {
+                        html = '<p>No data found.</p>';
+                    }
+
+                    container.innerHTML = html;
+                } else {
+                    showError('Failed to fetch data.');
+                }
+            } catch (error) {
+                showError('Error connecting to server.');
+                console.error(error);
+            }
+        }
+
+        function generateTable(items) {
+            if (!items || items.length === 0) return '';
+
+            let html = '<div style="overflow-x:auto;"><table style="width:100%; border-collapse: collapse; margin-bottom: 2rem;">';
+            html += '<thead><tr style="background:#f3f4f6; text-align:left;">';
+            html += '<th style="padding:0.5rem; border:1px solid #ddd;">Name</th>';
+            html += '<th style="padding:0.5rem; border:1px solid #ddd;">Email</th>';
+            html += '<th style="padding:0.5rem; border:1px solid #ddd;">Program</th>';
+            html += '<th style="padding:0.5rem; border:1px solid #ddd;">Date</th>';
+            html += '</tr></thead><tbody>';
+
+            items.forEach(item => {
+                const date = new Date(item.createdAt).toLocaleDateString();
+                html += '<tr>';
+                html += `<td style="padding:0.5rem; border:1px solid #ddd;">${item.fullName}</td>`;
+                html += `<td style="padding:0.5rem; border:1px solid #ddd;">${item.email}</td>`;
+                html += `<td style="padding:0.5rem; border:1px solid #ddd;">${item.program}</td>`;
+                html += `<td style="padding:0.5rem; border:1px solid #ddd;">${date}</td>`;
+                html += '</tr>';
+            });
+
+            html += '</tbody></table></div>';
+            return html;
+        }
+
+        function displayResult(data) {
+            document.getElementById('resName').innerText = data.fullName || '-';
+            document.getElementById('resEmail').innerText = data.email || '-';
+            document.getElementById('resPhone').innerText = data.phone || '-';
+            document.getElementById('resProgram').innerText = data.program || '-';
+            document.getElementById('resDetails').innerText = data.address || data.details || '-';
+
+            const date = new Date(data.createdAt);
+            document.getElementById('resDate').innerText = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+
+            document.getElementById('resultSection').style.display = 'block';
+        }
+
+        function showError(msg) {
+            const errorMsg = document.getElementById('errorMsg');
+            errorMsg.innerText = msg;
+            errorMsg.style.display = 'block';
+        }
+    </script>
+</body>
+
+</html>
